@@ -1,0 +1,46 @@
+// This is an optional configuration file used primarily for debugging purposes when reporting issues.
+// It is safe to delete this file as it does not affect the functionality of your application.
+{
+  "cesVersion": "2.21.3",
+  "projectName": "sharepic",
+  "packages": [
+    {
+      "name": "expo-router",
+      "type": "navigation",
+      "options": {
+        "type": "stack"
+      }
+    },
+    {
+      "name": "unistyles",
+      "type": "styling"
+    },
+    {
+      "name": "zustand",
+      "type": "state-management"
+    },
+    {
+      "name": "supabase",
+      "type": "authentication"
+    }
+  ],
+  "flags": {
+    "noGit": false,
+    "noInstall": false,
+    "overwrite": false,
+    "importAlias": true,
+    "packageManager": "yarn",
+    "eas": false,
+    "publish": false
+  },
+  "packageManager": {
+    "type": "yarn",
+    "version": "3.6.4"
+  },
+  "os": {
+    "type": "Darwin",
+    "platform": "darwin",
+    "arch": "arm64",
+    "kernelVersion": "24.6.0"
+  }
+}
