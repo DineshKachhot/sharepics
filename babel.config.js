@@ -7,6 +7,7 @@ module.exports = function (api) {
     {
       autoProcessRoot: 'app',
       autoProcessImports: ['~/components'],
+      root: './app',
     },
   ]);
 
