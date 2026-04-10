@@ -4,14 +4,17 @@ import { StyleSheet } from 'react-native-unistyles';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useImages, useUploadImages, Image as ImageType } from '@/hooks/useImages';
+import { useImages, useUploadImages, useDeleteImage, Image as ImageType } from '@/hooks/useImages';
+
 import { imagekit } from '@/utils/imagekit';
 
 export default function AlbumDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: images, isLoading } = useImages(id);
   const { mutateAsync: uploadImages, isPending: isUploading } = useUploadImages();
-  
+  const { mutateAsync: deleteImage, isPending: isDeleting } = useDeleteImage(id);
+
+
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [selectedImage, setSelectedImage] = useState<ImageType | null>(null);
 
@@ -57,6 +60,31 @@ export default function AlbumDetails() {
     }
   };
 
+  const handleDeleteImage = async () => {
+    if (!selectedImage) return;
+
+    Alert.alert(
+      "Delete Image",
+      "Are you sure you want to delete this image permanently?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteImage(selectedImage);
+              setSelectedImage(null);
+            } catch (error: any) {
+              Alert.alert("Delete Failed", error.message);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+
   const renderItem = ({ item }: { item: ImageType }) => {
     return (
       <TouchableOpacity
@@ -73,15 +101,15 @@ export default function AlbumDetails() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           title: 'Album',
           headerRight: () => (
             <TouchableOpacity onPress={handlePickAndUploadImages} disabled={isUploading}>
               <Ionicons name="cloud-upload" size={24} color={isUploading ? "#aaa" : "#007AFF"} style={{ marginRight: 15 }} />
             </TouchableOpacity>
           )
-        }} 
+        }}
       />
 
       {isLoading ? (
@@ -110,11 +138,11 @@ export default function AlbumDetails() {
             Uploading {uploadProgress.current} of {uploadProgress.total}
           </Text>
           <View style={styles.progressBarBackground}>
-            <View 
+            <View
               style={[
-                styles.progressBarFill, 
+                styles.progressBarFill,
                 { width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }
-              ]} 
+              ]}
             />
           </View>
         </View>
@@ -129,13 +157,26 @@ export default function AlbumDetails() {
       >
         <View style={styles.modalContainer}>
           <SafeAreaView style={{ flex: 1, position: 'relative' }}>
-            <TouchableOpacity 
-              style={styles.closeButton} 
+            <TouchableOpacity
+              style={styles.closeButton}
               onPress={() => setSelectedImage(null)}
             >
               <Ionicons name="close" size={30} color="white" />
             </TouchableOpacity>
-            
+
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDeleteImage}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Ionicons name="trash" size={26} color="#FF3B30" />
+              )}
+            </TouchableOpacity>
+
+
             {selectedImage && (
               <View style={styles.fullImageContainer}>
                 {/* 
@@ -173,7 +214,7 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.margins.xs,
   },
   imageGridItem: {
-    flex: 1/3,
+    flex: 1 / 3,
     aspectRatio: 1,
     padding: 2,
   },
@@ -232,6 +273,20 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 25,
   },
+  deleteButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 25,
+    minWidth: 50,
+    minHeight: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   fullImageContainer: {
     flex: 1,
     justifyContent: 'center',

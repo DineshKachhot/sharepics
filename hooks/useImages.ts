@@ -82,3 +82,37 @@ export const useUploadImages = () => {
     },
   });
 };
+
+export const useDeleteImage = (albumId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (image: Image) => {
+      // 1. Delete from ImageKit via Edge Function
+      const { data, error: edgeError } = await supabase.functions.invoke('imagekit-delete', {
+        body: { fileId: image.imagekit_file_id },
+      });
+
+      if (edgeError) {
+        throw new Error(`Failed to delete from ImageKit: ${edgeError.message}`);
+      }
+
+      // 2. Delete from Supabase
+      const { error: supabaseError } = await supabase
+        .from('images')
+        .delete()
+        .eq('id', image.id);
+
+      if (supabaseError) {
+        throw new Error(`Failed to delete from database: ${supabaseError.message}`);
+      }
+
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['images', albumId] });
+      queryClient.invalidateQueries({ queryKey: ['albums'] });
+    },
+  });
+};
+

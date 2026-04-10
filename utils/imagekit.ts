@@ -28,7 +28,7 @@ export const uploadFileToImageKit = async (file: any): Promise<any> => {
     body: { uploadParams },
   });
 
-  console.log('data:- ', data);
+  console.log('data:- ', data, authError);
 
   if (authError) {
     if (authError instanceof FunctionsHttpError) {

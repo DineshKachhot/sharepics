@@ -34,6 +34,8 @@ Sharepic is a React Native mobile application built with Expo explicitly targeti
 - **Authentication**: Uses ImageKit V2 API. Tokens are generated via a Supabase Edge Function (`imagekit-auth`) to ensure secure uploads from the client.
 - **Uploads**: Files are uploaded using native `fetch` with `FormData` in `utils/imagekit.ts`.
 - **Transformations**: Use `imagekit-javascript` for generating optimized and transformed image URLs.
+- **Deletion**: Handled via a Supabase Edge Function (`imagekit-delete`) which uses the ImageKit Admin API to permanently remove files.
+
 
 ## Agent Instructions (Token Saving Guidelines)
 When assisting with this codebase, abide by the following:
