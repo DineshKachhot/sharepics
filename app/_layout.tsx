@@ -1,3 +1,4 @@
+import 'react-native-url-polyfill/auto';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useUnistyles } from 'react-native-unistyles';
 import { Stack, useRouter, useSegments } from 'expo-router';

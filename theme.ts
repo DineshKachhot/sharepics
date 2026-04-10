@@ -15,6 +15,7 @@ export const lightTheme = {
     surface: '#F3F4F6',
     border: '#E5E7EB',
     error: '#EF4444',
+    card: '#ffffff',
   },
   margins: {
     sm: 4,
@@ -24,6 +25,13 @@ export const lightTheme = {
     xxl: 32,
   },
   radii: {
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
+    full: 9999,
+  },
+  roundness: {
     sm: 4,
     md: 8,
     lg: 12,
@@ -42,6 +50,7 @@ export const darkTheme = {
     surface: '#1F2937',
     border: '#374151',
     error: '#F87171',
+    card: '#1F2937',
   },
   margins: {
     sm: 4,
@@ -51,6 +60,13 @@ export const darkTheme = {
     xxl: 32,
   },
   radii: {
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
+    full: 9999,
+  },
+  roundness: {
     sm: 4,
     md: 8,
     lg: 12,
