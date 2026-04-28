@@ -1,12 +1,14 @@
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { View, Text, FlatList, TouchableOpacity, Image, Modal, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useImages, useUploadImages, useDeleteImage, Image as ImageType } from '@/hooks/useImages';
+import { FlashList } from '@shopify/flash-list';
 
-import { imagekit } from '@/utils/imagekit';
+import { ImageModal } from '@/components/ImageModal';
+import { ImageGridItem } from '@/components/ImageGridItem';
 
 export default function AlbumDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,26 +20,12 @@ export default function AlbumDetails() {
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [selectedImage, setSelectedImage] = useState<ImageType | null>(null);
 
-  const getThumbnailUrl = (imageUrl: string) => {
-    return imagekit.url({
-      src: imageUrl,
-      transformation: [{ height: "400", width: "400", cropMode: "pad_resize", quality: "80" }]
-    });
-  };
-
-  const getFullImageUrl = (imageUrl: string) => {
-    // Basic imagekit URL conversion for optimized web delivery if needed, or raw URL
-    return imagekit.url({
-      src: imageUrl,
-      transformation: [{ quality: "95" }]
-    });
-  };
 
   const handlePickAndUploadImages = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
-      selectionLimit: 20,
+      selectionLimit: 100,
       quality: 0.8,
     });
 
@@ -85,25 +73,21 @@ export default function AlbumDetails() {
   };
 
 
-  const renderItem = ({ item }: { item: ImageType }) => {
+  const renderItem = useCallback(({ item }: { item: ImageType }) => {
     return (
-      <TouchableOpacity
-        style={styles.imageGridItem}
-        onPress={() => setSelectedImage(item)}
-      >
-        <Image
-          source={{ uri: item.thumbnail_url || getThumbnailUrl(item.url) }}
-          style={styles.gridImage}
-        />
-      </TouchableOpacity>
+      <ImageGridItem
+        item={item}
+        onPress={setSelectedImage}
+      />
     );
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
           title: 'Album',
+          headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
             <TouchableOpacity onPress={handlePickAndUploadImages} disabled={isUploading}>
               <Ionicons name="cloud-upload" size={24} color={isUploading ? "#aaa" : "#007AFF"} style={{ marginRight: 15 }} />
@@ -117,11 +101,12 @@ export default function AlbumDetails() {
           <ActivityIndicator size="large" />
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={images}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           numColumns={3}
+          maxItemsInRecyclePool={10}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.center}>
@@ -148,52 +133,12 @@ export default function AlbumDetails() {
         </View>
       )}
 
-      {/* Full Screen Image Modal */}
-      <Modal
-        visible={!!selectedImage}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedImage(null)}
-      >
-        <View style={styles.modalContainer}>
-          <SafeAreaView style={{ flex: 1, position: 'relative' }}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setSelectedImage(null)}
-            >
-              <Ionicons name="close" size={30} color="white" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={handleDeleteImage}
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Ionicons name="trash" size={26} color="#FF3B30" />
-              )}
-            </TouchableOpacity>
-
-
-            {selectedImage && (
-              <View style={styles.fullImageContainer}>
-                {/* 
-                  React Native Image component natively supports caching. 
-                  We fetch the full image over the preview image.
-                */}
-                <Image
-                  source={{ uri: getFullImageUrl(selectedImage.url) }}
-                  defaultSource={{ uri: selectedImage.thumbnail_url || getThumbnailUrl(selectedImage.url) }}
-                  style={styles.fullImage}
-                  resizeMode="contain"
-                />
-              </View>
-            )}
-          </SafeAreaView>
-        </View>
-      </Modal>
+      <ImageModal
+        image={selectedImage}
+        onClose={() => setSelectedImage(null)}
+        onDelete={handleDeleteImage}
+        isDeleting={isDeleting}
+      />
 
     </View>
   );
@@ -211,18 +156,7 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 50,
   },
   listContent: {
-    padding: theme.margins.xs,
-  },
-  imageGridItem: {
-    flex: 1 / 3,
-    aspectRatio: 1,
-    padding: 2,
-  },
-  gridImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#eee',
-    borderRadius: 4,
+    padding: theme.margins.sm,
   },
   emptyText: {
     fontSize: 16,
@@ -260,40 +194,5 @@ const styles = StyleSheet.create((theme) => ({
     height: '100%',
     backgroundColor: theme.colors.primary,
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.95)',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    padding: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 25,
-  },
-  deleteButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 10,
-    padding: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 25,
-    minWidth: 50,
-    minHeight: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 
-  fullImageContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullImage: {
-    width: '100%',
-    height: '100%',
-  }
 }));

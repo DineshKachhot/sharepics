@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "newArchEnabled": true,
     "scheme": "sharepic",
+    "jsEngine": "hermes",
     "platforms": [
       "ios",
       "android",
@@ -17,7 +18,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image",
+        {
+          "disableLibdav1d": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -36,7 +43,9 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.dinesh.kachhot.sharepic"
+      "bundleIdentifier": "com.dinesh.kachhot.sharepic",
+      "appleTeamId": "K7Y5QY6LMX",
+      "jsEngine": "hermes"
     },
     "android": {
       "adaptiveIcon": {

@@ -72,3 +72,17 @@ export const uploadFileToImageKit = async (file: any): Promise<any> => {
   return response.json();
 };
 
+
+export const getThumbnailUrl = (imageUrl: string) => {
+  return imagekit.url({
+    src: imageUrl,
+    transformation: [{ height: 400, width: 400, cropMode: "extract", quality: 80 }]
+  });
+};
+
+export const getFullImageUrl = (imageUrl: string) => {
+  return imagekit.url({
+    src: imageUrl,
+    transformation: [{ quality: 95 }]
+  });
+};

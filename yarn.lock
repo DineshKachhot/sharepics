@@ -2709,6 +2709,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shopify/flash-list@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@shopify/flash-list@npm:2.0.2"
+  dependencies:
+    tslib: "npm:2.8.1"
+  peerDependencies:
+    "@babel/runtime": "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/c4e88348ce66e8f51c6213a42574a097d54cebf2125dc3fd8c077f3f7b83e25209c67bcb9a9102a3178c146cf5c23a978febd9a5ed5328ba1d7c663b5a8149d2
+  languageName: node
+  linkType: hard
+
 "@sinclair/typebox@npm:^0.27.8":
   version: 0.27.10
   resolution: "@sinclair/typebox@npm:0.27.10"
@@ -5069,7 +5082,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-image@npm:^55.0.8":
+"expo-image@npm:^55.0.8, expo-image@npm:~55.0.8":
   version: 55.0.8
   resolution: "expo-image@npm:55.0.8"
   dependencies:
@@ -8748,6 +8761,7 @@ __metadata:
     "@expo/vector-icons": "npm:^15.0.2"
     "@react-native-async-storage/async-storage": "npm:2.2.0"
     "@react-navigation/native": "npm:^7.1.6"
+    "@shopify/flash-list": "npm:2.0.2"
     "@supabase/supabase-js": "npm:^2.38.4"
     "@tanstack/react-query": "npm:^5.96.2"
     "@types/react": "npm:~19.2.10"
@@ -8757,6 +8771,7 @@ __metadata:
     expo: "npm:latest"
     expo-constants: "npm:~55.0.12"
     expo-file-system: "npm:^55.0.15"
+    expo-image: "npm:~55.0.8"
     expo-image-picker: "npm:^55.0.17"
     expo-linking: "npm:~55.0.11"
     expo-router: "npm:~55.0.11"

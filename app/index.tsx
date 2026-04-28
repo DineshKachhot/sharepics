@@ -1,11 +1,15 @@
 import { Link, Stack, useRouter } from 'expo-router';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAlbums, useCreateAlbum } from '@/hooks/useAlbums';
 import { Button } from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { imagekit } from '@/utils/imagekit';
+import { Image } from 'expo-image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/utils/supabase';
+import { useLogoutMutation } from '@/hooks/useAuthQueries';
 
 export default function Home() {
   const { data: albums, isLoading } = useAlbums();
@@ -13,6 +17,18 @@ export default function Home() {
   const [newFolderName, setNewFolderName] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const router = useRouter();
+  const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
+
+  // const handle = requestIdleCallback((deadline) => {
+  //   console.log(deadline.timeRemaining());
+  // }, { timeout: 1000 })
+
+  // // Remove idle callback on unmount to prevent memory leaks
+  // useEffect(() => {
+  //   return () => {
+  //     cancelIdleCallback(handle)
+  //   }
+  // }, [])
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) {
@@ -36,6 +52,26 @@ export default function Home() {
     });
   };
 
+  const onLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout', onPress: async () => {
+            try {
+              await logout();
+              router.replace('/(auth)/login');
+            } catch (e: any) {
+              Alert.alert('Error', e.message);
+            }
+          }
+        }
+      ]
+    );
+  }
+
   const renderItem = ({ item }: { item: any }) => {
     const firstImage = item.images && item.images.length > 0 ? item.images[0] : null;
 
@@ -49,6 +85,7 @@ export default function Home() {
             <Image
               source={{ uri: firstImage.thumbnail_url || getThumbnailUrl(firstImage.url) }}
               style={styles.thumbnail}
+              contentFit="cover"
             />
           ) : (
             <View style={styles.placeholderThumbnail}>
@@ -66,7 +103,15 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'My Albums' }} />
+      <Stack.Screen options={{
+        title: 'My Albums', headerBackButtonDisplayMode: 'minimal', headerRight: () => (
+          <View style={{ marginRight: 15, flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity onPress={onLogout} >
+              <Ionicons name="log-out" size={24} color={"#007AFF"} />
+            </TouchableOpacity>
+          </View>
+        )
+      }} />
 
       {isCreatingFolder && (
         <View style={styles.createFolderContainer}>
@@ -220,5 +265,11 @@ const styles = StyleSheet.create((theme) => ({
   emptyText: {
     fontSize: 16,
     color: '#888',
-  }
+  },
+  searchContainer: {
+    padding: theme.margins.md,
+    backgroundColor: theme.colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
 }));

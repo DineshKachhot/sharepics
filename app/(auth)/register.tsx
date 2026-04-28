@@ -70,7 +70,7 @@ export default function RegisterScreen() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
-            style={styles.lastInput}
+          // style={styles.lastInput}
           />
 
           <Button

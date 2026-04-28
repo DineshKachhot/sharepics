@@ -6,11 +6,11 @@ export const AuthService = {
       email,
       password,
     });
-    
+
     if (error) {
       throw new Error(error.message);
     }
-    
+
     return data;
   },
 
@@ -19,21 +19,31 @@ export const AuthService = {
       email,
       password,
     });
-    
+
     if (error) {
       throw new Error(error.message);
     }
-    
+
     return data;
   },
 
   async requestPasswordReset(email: string) {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-    
+
     if (error) {
       throw new Error(error.message);
     }
-    
+
     return data;
   },
+
+  async logout() {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return true;
+  }
 };

@@ -18,3 +18,9 @@ export const useResetPasswordMutation = () => {
     mutationFn: AuthService.requestPasswordReset,
   });
 };
+
+export const useLogoutMutation = () => {
+  return useMutation({
+    mutationFn: AuthService.logout,
+  });
+}
