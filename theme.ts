@@ -37,6 +37,13 @@ export const lightTheme = {
     lg: 12,
     xl: 16,
     full: 9999,
+  },
+  fontSizes: {
+    sm: 10,
+    md: 12,
+    lg: 14,
+    xl: 16,
+    xxl: 18
   }
 } as const;
 
@@ -72,5 +79,12 @@ export const darkTheme = {
     lg: 12,
     xl: 16,
     full: 9999,
+  },
+  fontSizes: {
+    sm: 10,
+    md: 12,
+    lg: 14,
+    xl: 16,
+    xxl: 18
   }
 } as const;

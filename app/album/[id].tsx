@@ -10,6 +10,8 @@ import { FlashList } from '@shopify/flash-list';
 import { ImageModal } from '@/components/ImageModal';
 import { ImageGridItem } from '@/components/ImageGridItem';
 
+import { LegendList, LegendListRef } from "@legendapp/list"
+
 export default function AlbumDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: images, isLoading } = useImages(id);
@@ -101,12 +103,13 @@ export default function AlbumDetails() {
           <ActivityIndicator size="large" />
         </View>
       ) : (
-        <FlashList
-          data={images}
+        <LegendList
+          data={images || []}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           numColumns={3}
-          maxItemsInRecyclePool={10}
+          recycleItems={true}
+          estimatedItemSize={120}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.center}>

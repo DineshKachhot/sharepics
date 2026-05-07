@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { View, Modal, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
+import { View, Modal, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { StyleSheet } from 'react-native-unistyles';
@@ -44,14 +45,14 @@ export const ImageModal = memo(({ image, onClose, onDelete, isDeleting }: ImageM
             )}
           </TouchableOpacity>
 
-          <View style={styles.fullImageContainer}>
+          <ScrollView contentContainerStyle={styles.fullImageContainer} maximumZoomScale={5} minimumZoomScale={1} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
             <Image
               source={{ uri: getFullImageUrl(image.url) }}
               placeholder={{ uri: image.thumbnail_url || getThumbnailUrl(image.url) }}
               style={styles.fullImage}
               contentFit="contain"
             />
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </View>
     </Modal>
