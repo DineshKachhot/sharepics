@@ -1,7 +1,7 @@
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useImages, useUploadImages, useDeleteImage, Image as ImageType } from '@/hooks/useImages';
@@ -75,14 +75,14 @@ export default function AlbumDetails() {
   };
 
 
-  const renderItem = useCallback(({ item }: { item: ImageType }) => {
+  const renderItem = memo(({ item }: { item: ImageType }) => {
     return (
       <ImageGridItem
         item={item}
         onPress={setSelectedImage}
       />
     );
-  }, []);
+  });
 
   return (
     <View style={styles.container}>
