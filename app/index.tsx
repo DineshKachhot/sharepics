@@ -48,7 +48,7 @@ export default function Home() {
     // We add simple transformation parameters for thumbnails, ensuring uniform size and low bandwidth usage
     return imagekit.url({
       src: imageUrl,
-      transformation: [{ height: "300", width: "300", cropMode: "pad_resize" }]
+      transformation: [{ height: "300", width: "300", cropMode: "extract" }]
     });
   };
 
@@ -85,7 +85,7 @@ export default function Home() {
             <Image
               source={{ uri: firstImage.thumbnail_url || getThumbnailUrl(firstImage.url) }}
               style={styles.thumbnail}
-              contentFit="cover"
+              contentFit="none"
             />
           ) : (
             <View style={styles.placeholderThumbnail}>
@@ -198,7 +198,7 @@ const styles = StyleSheet.create((theme) => ({
   thumbnailContainer: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#f0f0f0',
+    // backgroundColor: '#f0f0f0',
   },
   thumbnail: {
     width: '100%',

@@ -19,7 +19,7 @@ export const ImageGridItem = memo(({ item, onPress }: ImageGridItemProps) => {
       <Image
         source={{ uri: item.thumbnail_url || getThumbnailUrl(item.url) }}
         style={styles.gridImage}
-        contentFit="cover"
+        contentFit="none"
         transition={200}
       />
     </TouchableOpacity>
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   gridImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#f0f0f0',
+    // backgroundColor: '#f0f0f0',
     borderRadius: 8,
   },
 });
