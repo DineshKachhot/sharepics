@@ -6,56 +6,53 @@ import { Image } from 'expo-image';
 import { StyleSheet } from 'react-native-unistyles';
 import { Image as ImageType } from '@/hooks/useImages';
 import { getThumbnailUrl, getFullImageUrl } from '@/utils/imagekit';
+import Animated from 'react-native-reanimated';
 
 interface ImageModalProps {
-  image: ImageType | null;
+  image: ImageType;
   onClose: () => void;
   onDelete: () => void;
   isDeleting: boolean;
 }
 
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+
 export const ImageModal = memo(({ image, onClose, onDelete, isDeleting }: ImageModalProps) => {
   if (!image) return null;
 
   return (
-    <Modal
-      visible={!!image}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalContainer}>
-        <SafeAreaView style={{ flex: 1, position: 'relative' }}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-          >
-            <Ionicons name="close" size={30} color="white" />
-          </TouchableOpacity>
+    <View style={styles.modalContainer}>
+      <SafeAreaView style={{ flex: 1, position: 'relative' }}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={onClose}
+        >
+          <Ionicons name="close" size={30} color="white" />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={onDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Ionicons name="trash" size={26} color="#FF3B30" />
-            )}
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={onDelete}
+          disabled={isDeleting}
+        >
+          {isDeleting ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Ionicons name="trash" size={26} color="#FF3B30" />
+          )}
+        </TouchableOpacity>
 
-          <ScrollView contentContainerStyle={styles.fullImageContainer} maximumZoomScale={5} minimumZoomScale={1} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
-            <Image
-              source={{ uri: getFullImageUrl(image.url) }}
-              placeholder={{ uri: image.thumbnail_url || getThumbnailUrl(image.url) }}
-              style={styles.fullImage}
-              contentFit="contain"
-            />
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    </Modal>
+        <ScrollView contentContainerStyle={styles.fullImageContainer} maximumZoomScale={5} minimumZoomScale={1} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
+          <AnimatedImage
+            sharedTransitionTag={`image-${image.id}`}
+            source={{ uri: getFullImageUrl(image.url) }}
+            placeholder={{ uri: image.thumbnail_url || getThumbnailUrl(image.url) }}
+            style={styles.fullImage}
+            contentFit="contain"
+          />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 });
 

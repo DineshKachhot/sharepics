@@ -58,6 +58,7 @@ export default function Layout() {
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="album/full-image/[id]" options={{ headerShown: false }} />
       </Stack>
     </QueryClientProvider>
   );

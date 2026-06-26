@@ -1,9 +1,9 @@
-import { useLocalSearchParams, Stack } from 'expo-router';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { useLocalSearchParams, Stack, router } from 'expo-router';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert, Animated } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, memo, useRef } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+import { Entypo, Ionicons } from '@expo/vector-icons';
 import { useImages, useUploadImages, useDeleteImage, Image as ImageType } from '@/hooks/useImages';
 import { FlashList } from '@shopify/flash-list';
 
@@ -20,7 +20,9 @@ export default function AlbumDetails() {
 
 
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
-  const [selectedImage, setSelectedImage] = useState<ImageType | null>(null);
+  // const [selectedImage, setSelectedImage] = useState<ImageType | null>(null);
+
+  const selectedImage = useRef<ImageType | null>(null);
 
 
   const handlePickAndUploadImages = async () => {
@@ -63,8 +65,8 @@ export default function AlbumDetails() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteImage(selectedImage);
-              setSelectedImage(null);
+              await deleteImage(selectedImage.current!);
+              selectedImage.current = null;
             } catch (error: any) {
               Alert.alert("Delete Failed", error.message);
             }
@@ -79,10 +81,23 @@ export default function AlbumDetails() {
     return (
       <ImageGridItem
         item={item}
-        onPress={setSelectedImage}
+        onPress={() => {
+          selectedImage.current = item;
+          router.push({
+            pathname: "/album/full-image/[id]",
+            params: {
+              id: item.id,
+              url: item.url,
+              thumbnail_url: item.thumbnail_url || '',
+              albumId: id,
+            }
+          });
+        }}
       />
     );
   });
+
+  const AnimatedOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
   return (
     <View style={styles.container}>
@@ -91,9 +106,15 @@ export default function AlbumDetails() {
           title: 'Album',
           headerBackButtonDisplayMode: 'minimal',
           headerRight: () => (
-            <TouchableOpacity onPress={handlePickAndUploadImages} disabled={isUploading}>
+            <AnimatedOpacity onPress={handlePickAndUploadImages} disabled={isUploading} style={{
+              animationName: {
+                '100%': {
+                  transform: [{ translateX: 100 }],
+                }
+              }
+            }}>
               <Ionicons name="cloud-upload" size={24} color={isUploading ? "#aaa" : "#007AFF"} style={{ marginRight: 15 }} />
-            </TouchableOpacity>
+            </AnimatedOpacity>
           )
         }}
       />
@@ -136,12 +157,28 @@ export default function AlbumDetails() {
         </View>
       )}
 
-      <ImageModal
+      {!isUploading && (
+        <TouchableOpacity
+          style={[styles.fab, {
+            animationName: {
+              '100%': {
+                transform: [{ translateX: 100 }],
+              }
+            }
+          }]}
+          onPress={handlePickAndUploadImages}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {/* <ImageModal
         image={selectedImage}
         onClose={() => setSelectedImage(null)}
         onDelete={handleDeleteImage}
         isDeleting={isDeleting}
-      />
+      /> */}
 
     </View>
   );
@@ -164,6 +201,22 @@ const styles = StyleSheet.create((theme) => ({
   emptyText: {
     fontSize: 16,
     color: '#888',
+  },
+  fab: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 20,
+    bottom: 30,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 30,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   progressContainer: {
     position: 'absolute',

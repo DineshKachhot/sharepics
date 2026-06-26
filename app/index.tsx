@@ -1,15 +1,79 @@
-import { Link, Stack, useRouter } from 'expo-router';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert, TextInput, useWindowDimensions } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { useEffect, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { useAlbums, useCreateAlbum } from '@/hooks/useAlbums';
 import { Button } from '@/components/Button';
-import { Ionicons } from '@expo/vector-icons';
+import { Entypo, Ionicons } from '@expo/vector-icons';
 import { imagekit } from '@/utils/imagekit';
 import { Image } from 'expo-image';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '@/utils/supabase';
 import { useLogoutMutation } from '@/hooks/useAuthQueries';
+import Animated, {
+  useSharedValue,
+  withSpring,
+  useAnimatedStyle,
+  interpolate,
+  SharedValue,
+} from 'react-native-reanimated';
+import { LegendList } from '@legendapp/list';
+
+const LIST_IMG_SIZE = 80;
+const SPRING_CONFIG = { damping: 50, stiffness: 300 };
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+
+const getThumbnailUrl = (imageUrl: string) =>
+  imagekit.url({
+    src: imageUrl,
+    transformation: [{ height: '300', width: '300', cropMode: 'extract' }],
+  });
+
+type AlbumCardProps = {
+  item: any;
+  progress: SharedValue<number>;
+  gridCardWidth: number;
+  listCardWidth: number;
+  onPress: () => void;
+};
+
+const AlbumCard = memo(({ item, progress, gridCardWidth, listCardWidth, onPress }: AlbumCardProps) => {
+  const cardStyle = useAnimatedStyle(() => ({
+    width: interpolate(progress.value, [0, 1], [gridCardWidth, listCardWidth]),
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  }));
+
+  // height follows from aspectRatio: 1 in base styles
+  const imgContainerStyle = useAnimatedStyle(() => ({
+    width: interpolate(progress.value, [0, 1], [gridCardWidth, LIST_IMG_SIZE]),
+  }));
+
+  const firstImage = item.images?.[0] ?? null;
+
+  return (
+    <AnimatedTouchableOpacity style={[styles.albumCard, cardStyle]} onPress={onPress}>
+      <Animated.View style={[styles.thumbnailContainer, imgContainerStyle]}>
+        {firstImage ? (
+          <AnimatedImage
+            source={{ uri: firstImage.thumbnail_url || getThumbnailUrl(firstImage.url) }}
+            style={styles.thumbnail}
+            contentFit="cover"
+            sharedTransitionTag={`thumbnail-${item.id}`}
+          />
+        ) : (
+          <View style={styles.placeholderThumbnail}>
+            <Ionicons name="folder-outline" size={40} color="#888" />
+          </View>
+        )}
+      </Animated.View>
+      <View style={styles.albumInfo}>
+        <Text style={styles.albumName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.imageCount}>{item.images?.length ?? 0} images</Text>
+      </View>
+    </AnimatedTouchableOpacity>
+  );
+});
 
 export default function Home() {
   const { data: albums, isLoading } = useAlbums();
@@ -17,18 +81,14 @@ export default function Home() {
   const [newFolderName, setNewFolderName] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const router = useRouter();
-  const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
+  const { mutateAsync: logout } = useLogoutMutation();
 
-  // const handle = requestIdleCallback((deadline) => {
-  //   console.log(deadline.timeRemaining());
-  // }, { timeout: 1000 })
+  const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
+  const progress = useSharedValue(0); // 0=grid, 1=list
 
-  // // Remove idle callback on unmount to prevent memory leaks
-  // useEffect(() => {
-  //   return () => {
-  //     cancelIdleCallback(handle)
-  //   }
-  // }, [])
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const GRID_CARD_WIDTH = (SCREEN_WIDTH - 40) / 2;
+  const LIST_CARD_WIDTH = SCREEN_WIDTH - 24;
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) {
@@ -44,74 +104,62 @@ export default function Home() {
     }
   };
 
-  const getThumbnailUrl = (imageUrl: string) => {
-    // We add simple transformation parameters for thumbnails, ensuring uniform size and low bandwidth usage
-    return imagekit.url({
-      src: imageUrl,
-      transformation: [{ height: "300", width: "300", cropMode: "extract" }]
-    });
-  };
-
   const onLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout', onPress: async () => {
-            try {
-              await logout();
-              router.replace('/(auth)/login');
-            } catch (e: any) {
-              Alert.alert('Error', e.message);
-            }
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        onPress: async () => {
+          try {
+            await logout();
+            router.replace('/(auth)/login');
+          } catch (e: any) {
+            Alert.alert('Error', e.message);
           }
-        }
-      ]
-    );
-  }
-
-  const renderItem = ({ item }: { item: any }) => {
-    const firstImage = item.images && item.images.length > 0 ? item.images[0] : null;
-
-    return (
-      <TouchableOpacity
-        style={styles.albumCard}
-        onPress={() => router.push(`/album/${item.id}`)}
-      >
-        <View style={styles.thumbnailContainer}>
-          {firstImage ? (
-            <Image
-              source={{ uri: firstImage.thumbnail_url || getThumbnailUrl(firstImage.url) }}
-              style={styles.thumbnail}
-              contentFit="none"
-            />
-          ) : (
-            <View style={styles.placeholderThumbnail}>
-              <Ionicons name="folder-outline" size={40} color="#888" />
-            </View>
-          )}
-        </View>
-        <View style={styles.albumInfo}>
-          <Text style={styles.albumName} numberOfLines={1}>{item.name}</Text>
-          <Text style={styles.imageCount}>{item.images?.length || 0} images</Text>
-        </View>
-      </TouchableOpacity>
-    );
+        },
+      },
+    ]);
   };
+
+  const handelViewTypeToggle = () => {
+    const toList = viewType === 'grid';
+    progress.value = withSpring(toList ? 1 : 0, SPRING_CONFIG);
+    setViewType(toList ? 'list' : 'grid');
+  };
+
+  const renderItem = useCallback(
+    ({ item }: { item: any }) => (
+      <AlbumCard
+        item={item}
+        progress={progress}
+        gridCardWidth={GRID_CARD_WIDTH}
+        listCardWidth={LIST_CARD_WIDTH}
+        onPress={() => router.push(`/album/${item.id}`)}
+      />
+    ),
+    [GRID_CARD_WIDTH, LIST_CARD_WIDTH, progress, router],
+  );
+
+  const numColumns = viewType === 'grid' ? 2 : 1;
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{
-        title: 'My Albums', headerBackButtonDisplayMode: 'minimal', headerRight: () => (
-          <View style={{ marginRight: 15, flexDirection: 'row', gap: 10 }}>
-            <TouchableOpacity onPress={onLogout} >
-              <Ionicons name="log-out" size={24} color={"#007AFF"} />
-            </TouchableOpacity>
-          </View>
-        )
-      }} />
+      <Stack.Screen
+        options={{
+          title: 'My Albums',
+          headerBackButtonDisplayMode: 'minimal',
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
+              <TouchableOpacity onPress={handelViewTypeToggle}>
+                <Entypo name="grid" size={24} color="#007AFF" style={{ marginRight: 15, marginLeft: 8 }} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handelViewTypeToggle}>
+                <Entypo name="list" size={24} color="#007AFF" />
+              </TouchableOpacity>
+            </View>
+          ),
+        }}
+      />
 
       {isCreatingFolder && (
         <View style={styles.createFolderContainer}>
@@ -123,13 +171,9 @@ export default function Home() {
             autoFocus
           />
           <View style={styles.createButtons}>
+            <Button title="Cancel" onPress={() => setIsCreatingFolder(false)} style={styles.cancelButton} />
             <Button
-              title="Cancel"
-              onPress={() => setIsCreatingFolder(false)}
-              style={styles.cancelButton}
-            />
-            <Button
-              title={isCreating ? "Creating..." : "Create"}
+              title={isCreating ? 'Creating...' : 'Create'}
               onPress={handleCreateFolder}
               disabled={isCreating}
             />
@@ -142,13 +186,14 @@ export default function Home() {
           <ActivityIndicator size="large" />
         </View>
       ) : (
-        <FlatList
-          data={albums}
+        <LegendList
+          data={albums!}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          numColumns={2}
+          numColumns={numColumns}
+          columnWrapperStyle={viewType === 'grid' ? { columnGap: 16 } : undefined}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={styles.listContent}
-          columnWrapperStyle={styles.columnWrapper}
           ListEmptyComponent={
             <View style={styles.center}>
               <Text style={styles.emptyText}>No albums yet.</Text>
@@ -180,12 +225,7 @@ const styles = StyleSheet.create((theme) => ({
   listContent: {
     padding: theme.margins.md,
   },
-  columnWrapper: {
-    justifyContent: 'space-between',
-    marginBottom: theme.margins.md,
-  },
   albumCard: {
-    width: '48%',
     backgroundColor: theme.colors.card,
     borderRadius: theme.roundness.lg,
     overflow: 'hidden',
@@ -196,9 +236,7 @@ const styles = StyleSheet.create((theme) => ({
     elevation: 3,
   },
   thumbnailContainer: {
-    width: '100%',
     aspectRatio: 1,
-    // backgroundColor: '#f0f0f0',
   },
   thumbnail: {
     width: '100%',
@@ -212,7 +250,10 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
   },
   albumInfo: {
-    padding: theme.margins.sm,
+    flex: 1,
+    padding: theme.margins.md,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   albumName: {
     fontSize: 16,
@@ -265,11 +306,5 @@ const styles = StyleSheet.create((theme) => ({
   emptyText: {
     fontSize: 16,
     color: '#888',
-  },
-  searchContainer: {
-    padding: theme.margins.md,
-    backgroundColor: theme.colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
 }));
