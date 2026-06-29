@@ -20,6 +20,7 @@
     "@tanstack/react-query": "^5.96.2",
     "expo": "latest",
     "expo-constants": "~55.0.12",
+    "expo-dev-client": "~55.0.36",
     "expo-file-system": "^55.0.15",
     "expo-image": "~55.0.8",
     "expo-image-picker": "^55.0.17",
